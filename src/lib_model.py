@@ -7,7 +7,7 @@ from keras.models import Sequential, load_model
 from keras import layers
 from keras.layers import Dense, Dropout
 from keras.callbacks import EarlyStopping, LearningRateScheduler
-from keras.applications import mobilenet_v3, efficientnet_v2
+from keras.applications import efficientnet_v2
 
 from lib_data import create_tensorset
 
@@ -31,12 +31,14 @@ def build_classifier(nc, mod, size, compression, lr, dr):
         loss_f = tfa.losses.SigmoidFocalCrossEntropy() # use tfa.losses.SigmoidFocalCrossEntropy()
         act_f = 'softmax'
     
-    if mod == 'MN-V3-S':
-        model_base = mobilenet_v3.MobileNetV3Small(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')     #  1.0M, 224px
-    elif mod == 'EN-B2':    
-        model_base = efficientnet_v2.EfficientNetV2B2(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  #  8.9M, 260px    
+    if mod == 'EN-B0':
+        model_base = efficientnet_v2.EfficientNetV2B0(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  #  6.0M, 224px
+    elif mod == 'EN-V2S':    
+        model_base = efficientnet_v2.EfficientNetV2S(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  #  20.4M, 300px    
     elif mod == 'EN-V2M':    
         model_base = efficientnet_v2.EfficientNetV2M(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')   # 53.2M, 384px
+    elif mod == 'EN-V2L':    
+        model_base = efficientnet_v2.EfficientNetV2L(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  # 117.8M, 480px 
     else:
         model_base = load_model(mod)
         model_base = model_base.layers[0]
