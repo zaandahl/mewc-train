@@ -8,4 +8,4 @@ WORKDIR /code
 COPY src/ .
 
 # run training script
-CMD [ "python", "./en_train.py" ]
+CMD [ "python", "./mewc_train.py" ]
