@@ -42,6 +42,9 @@ test_df = create_tensorset(
         ds_name="test" # set to test to turn off augmentation, or train or validation to include it
 )
 
+if not os.path.exists(config['OUTPUT_PATH']):
+    os.makedirs(config['OUTPUT_PATH'])
+
 with strategy.scope(): # This first trains the DenseNet(s), but leaves the base model frozen, to avoid catastrophic cascades into the base layers
     en_model = build_classifier(nc=num_classes, mod=config['MODEL'], size=config['SHAPES'][0], compression=config['CLW'], lr=5e-5, dr=0.1) # use high LR and low DR on frozen model
 
@@ -53,6 +56,7 @@ with strategy.scope(): # This first trains the DenseNet(s), but leaves the base 
         dropout=config['DROPOUTS'][0],
         magnitude=config['MAGNITUDES'][0],
         batch_size=config['BATCH_SIZES'][0],
+        output_path=config['OUTPUT_PATH'],
         train_df=train_df,
         val_df=val_df,
         layers_to_unfreeze=config['LUF'] # -1 unfreezes the whole model, 0 freezes base model, select 1 or greater to unfreeze n layers (blocks, see config comments)
@@ -64,13 +68,12 @@ en_model.summary() # print model summary
 
 prog_train = [] # store training samples for each epoch
 prog_val = []  # store validation samples for each epoch
-for i in range(config['PROG_TOT_EPOCH']):
+for i in tqdm(range(config['PROG_TOT_EPOCH'])):
     train_tmp, num_classes = create_train(
         config['TRAIN_PATH'],
         seed=config['SEED'] + i * config['SEED'],
         ns=config['N_SAMPLES']
     )
-    print(i+1)
     prog_train.append(train_tmp)
     prog_val.append(val_df) # validation images remain constant (but are augmented each progress iteration)
 
@@ -80,6 +83,7 @@ prog_hists, en_model = fit_progressive(
         prog_val,
         test_df,
         savefile=config['SAVEFILE'],
+        output_path=config['OUTPUT_PATH'],
         lr_scheduler=exp_scheduler,
         total_epochs=config['PROG_TOT_EPOCH'],
         prog_stage_len=config['PROG_STAGE_LEN'],

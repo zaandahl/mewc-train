@@ -98,6 +98,7 @@ def fit_frozen(
     num_classes,
     train_df,
     val_df,
+    output_path,
     epochs=50,
     batch_size=64,
     target_shape=224,
@@ -117,9 +118,9 @@ def fit_frozen(
     
     hist = model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=cb)
     
-    model.save('frozen.h5', save_format="h5")
+    model.save(output_path+'frozen.h5', save_format="h5")
     unfreeze_model(model, lr=out_lr, num_classes=num_classes, layers_to_unfreeze=layers_to_unfreeze)
-    model.save('unfrozen.h5', save_format="h5")
+    model.save(output_path+'unfrozen.h5', save_format="h5")
 
     return(hist, model)
 
@@ -129,6 +130,7 @@ def fit_progressive(
     val_df,
     test_ds,
     savefile,
+    output_path,
     lr_scheduler=None,
     total_epochs=50,
     prog_stage_len=10,
@@ -177,10 +179,10 @@ def fit_progressive(
             epoch_test_loss = float(model.evaluate(test_ds, batch_size=batch_size)[0]) # check on non-augmented test data to see if best epoch
             if epoch_test_loss <= lowest_loss: # save model only if current validation loss is as good as or better than all previous epochs
                 lowest_loss = epoch_test_loss # update new best val_acc
-                model.save(savefile+'_'+str(target_shape)+'px_best.h5', save_format="h5")
-                print('New best-performing epoch of model (size = {}px) saved as: {}'.format(target_shape, savefile+'_'+str(target_shape)+'px_best.h5'))
+                model.save(output_path+savefile+'_'+str(target_shape)+'px_best.h5', save_format="h5")
+                print('New best-performing epoch of model (size = {}px) saved as: {}'.format(target_shape, output_path+savefile+'_'+str(target_shape)+'px_best.h5'))
 
-    model.save(savefile+'_'+str(target_shape)+'px_final.h5', save_format="h5") # save final epoch as well
-    print('Final model at epoch {} of model (size = {}px) saved as: {}'.format(total_epochs, target_shape, savefile+'_'+str(target_shape)+'px_final'))
+    model.save(output_path+savefile+'_'+str(target_shape)+'px_final.h5', save_format="h5") # save final epoch as well
+    print('Final model at epoch {} of model (size = {}px) saved as: {}'.format(total_epochs, target_shape, output_path+savefile+'_'+str(target_shape)+'px_final'))
     hhs = {kk: np.ravel([hh.history[kk] for hh in histories]).astype("float").tolist() for kk in history.history.keys()}
     return(hhs, model)
