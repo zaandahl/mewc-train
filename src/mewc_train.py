@@ -3,6 +3,7 @@ import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import warnings
 import tensorflow as tf
+from tqdm import tqdm
 from lib_data import read_yaml, print_dsinfo, create_train, create_fixed, create_tensorset
 from lib_model import build_classifier, fit_frozen, fit_progressive, exp_scheduler
 
