@@ -14,8 +14,14 @@ for conf_key in config.keys():
     if conf_key in os.environ:
         config[conf_key] = os.environ[conf_key]
 
-gpus = tf.config.list_logical_devices('GPU'); print(gpus) 
-strategy = tf.distribute.MirroredStrategy(devices=gpus, cross_device_ops=tf.distribute.HierarchicalCopyAllReduce()) 
+gpus = tf.config.list_physical_devices('GPU')
+if gpus:
+    if len(gpus) > 1:
+        strategy = tf.distribute.MirroredStrategy(devices=gpus, cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
+    else:
+        strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
+else:
+    strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 
 train_df, num_classes = create_train(
     config['TRAIN_PATH'],
