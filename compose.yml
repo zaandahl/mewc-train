@@ -1,0 +1,6 @@
+services:
+  app:
+    image: zaandahl/en-train
+    build:
+      context: .
+      dockerfile: ./Dockerfile

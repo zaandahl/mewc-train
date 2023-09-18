@@ -1,0 +1,33 @@
+SEED: 1234 # random seed for reproducibility
+MODEL: 'MN-V3-S' # 'MN-V3-S', 'EN-B2' 'EN-V2M' or else supply base-model filename
+CLW: 128 # width of the compression bottleneck layer
+LUF: 53 # Layers to Unfreeze: last two two blocks only set as trainable: 
+#    MN-V3-S : blocks 9/10: LUF = 53 or EN-B2 : blocks 5/6 : LUF = 240 or EN-V2M : blocks 6/7 : LUF = 345
+SAVEFILE: 'mewc_MNV3S' # filename to save model
+
+TRAIN_PATH: '/data/train' # path to training data
+TEST_PATH: '/data/test' # path to test data
+
+N_SAMPLES: 2000 # number of samples to use for training per class
+
+FROZ_EPOCH: 10 # number of epochs to train frozen model to converge the dense classifier
+PROG_TOT_EPOCH: 50 #  number of epochs required typically depends on size of N_SAMPLES (larger requires fewer epochs per stage)
+PROG_STAGE_LEN: 10 # progressive number of epochs prior to final sequence
+
+# All hyperparameters must be of the same length
+MAGNITUDES: # ImgAug magnitudes, adjusted progressively
+  - 5
+  - 15
+  - 25
+DROPOUTS: # Dropout rates, adjusted progressively
+  - 0.10
+  - 0.20
+  - 0.30
+SHAPES: # Image sizes: MN-V3-S = 224, EN-B2 = 260, EN-V2M = 384
+  - 224
+  - 224
+  - 224
+BATCH_SIZES: # Mini-batch sizes
+  - 128
+  - 128
+  - 128
