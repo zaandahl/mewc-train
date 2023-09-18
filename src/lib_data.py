@@ -26,7 +26,7 @@ def create_train(ds_path, seed=42, ns=1000):
     # Creates a sampled pandas dataframe with the image path and class label derived from the directory structure
     def create_dataframe(ds_path, n, seed):
         dir_ = Path(ds_path) # Selecting folder paths in dataset
-        ds_filepaths = list(dir_.glob(r'**/*.jpg'))
+        ds_filepaths = list(dir_.glob('**/*.[jJ][pP][gG]'))
         ds_labels = list(map(lambda x: os.path.split(os.path.split(x)[0])[1], ds_filepaths)) # Mapping labels...
         ds_filepaths = pd.Series(ds_filepaths, name='File').astype(str) # Data set paths & labels
         ds_labels = pd.Series(ds_labels, name='Label')
@@ -45,7 +45,7 @@ def create_train(ds_path, seed=42, ns=1000):
 def create_fixed(ds_path):
     # Selecting folder paths in dataset
     dir_ = Path(ds_path)
-    ds_filepaths = list(dir_.glob(r'**/*.jpg'))
+    ds_filepaths = list(dir_.glob('**/*.[jJ][pP][gG]'))
     # Mapping labels...
     ds_labels = list(map(lambda x: os.path.split(os.path.split(x)[0])[1], ds_filepaths))
     # Data set paths & labels
