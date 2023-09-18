@@ -1,20 +1,21 @@
-SEED: 1234 # random seed for reproducibility
-MODEL: 'MN-V3-S' # 'MN-V3-S', 'EN-B2' 'EN-V2M' or else supply base-model filename
-CLW: 128 # width of the compression bottleneck layer
-LUF: 53 # Layers to Unfreeze: last two two blocks only set as trainable: 
-#    MN-V3-S : blocks 9/10: LUF = 53 or EN-B2 : blocks 5/6 : LUF = 240 or EN-V2M : blocks 6/7 : LUF = 345
-SAVEFILE: 'mewc_MNV3S' # filename to save model
+SEED: 12345 # random seed for reproducibility
+MODEL: 'EN-V2S' # 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename
+CLW: 512 # width of the compression bottleneck layer (use 256 for B0, 512 for others)
+LUF: 360 # Layers to Unfreeze: last two two blocks only set as trainable: 
+# B0 : blocks 5/6: LUF = 193 or EN-V2S : LUF = 360 or EN-V2M : blocks 6/7 : LUF = 345 or EN-V2L : LUF = 480
+SAVEFILE: 'mewc_ENV2S_10class' # filename to save model
 
 TRAIN_PATH: '/data/train' # path to training data
 TEST_PATH: '/data/test' # path to test data
+OUTPUT_PATH: '/data/output' # path to save output
 
-N_SAMPLES: 2000 # number of samples to use for training per class
+N_SAMPLES: 4000 # number of samples to use for training per class
 
-FROZ_EPOCH: 10 # number of epochs to train frozen model to converge the dense classifier
-PROG_TOT_EPOCH: 50 #  number of epochs required typically depends on size of N_SAMPLES (larger requires fewer epochs per stage)
+FROZ_EPOCH: 15 # number of epochs to train frozen model to converge the dense classifier
 PROG_STAGE_LEN: 10 # progressive number of epochs prior to final sequence
+PROG_TOT_EPOCH: 50 #  number of epochs required typically depends on size of N_SAMPLES (larger requires fewer epochs per stage)
 
-# All hyperparameters must be of the same length
+# All hyperparameters lists must be of the same length
 MAGNITUDES: # ImgAug magnitudes, adjusted progressively
   - 5
   - 15
@@ -23,11 +24,11 @@ DROPOUTS: # Dropout rates, adjusted progressively
   - 0.10
   - 0.20
   - 0.30
-SHAPES: # Image sizes: MN-V3-S = 224, EN-B2 = 260, EN-V2M = 384
-  - 224
-  - 224
-  - 224
-BATCH_SIZES: # Mini-batch sizes
-  - 128
-  - 128
-  - 128
+SHAPES: # Image sizes: EN-B0 = 224, EN-V2S = 300, EN-V2M = 384, EN-V2L = 480
+  - 300
+  - 300
+  - 300
+BATCH_SIZES: # Mini-batch sizes (depends on GPU memory)
+  - 48
+  - 48
+  - 48
