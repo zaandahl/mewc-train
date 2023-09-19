@@ -7,7 +7,7 @@ from keras.models import Sequential, load_model
 from keras import layers
 from keras.layers import Dense, Dropout
 from keras.callbacks import EarlyStopping, LearningRateScheduler
-from keras.applications import efficientnet_v2
+from keras.applications import mobilenet_v3, efficientnet_v2
 
 from lib_data import create_tensorset
 
@@ -31,7 +31,9 @@ def build_classifier(nc, mod, size, compression, lr, dr):
         loss_f = tfa.losses.SigmoidFocalCrossEntropy() # use tfa.losses.SigmoidFocalCrossEntropy()
         act_f = 'softmax'
     
-    if mod == 'EN-B0':
+    if mod == 'MN-V3-S':
+        model_base = mobilenet_v3.MobileNetV3Small(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')     #  1.0M, 224px
+    elif mod == 'EN-B0':
         model_base = efficientnet_v2.EfficientNetV2B0(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  #  6.0M, 224px
     elif mod == 'EN-V2S':    
         model_base = efficientnet_v2.EfficientNetV2S(include_top=False, input_shape=(size,size,3), pooling="avg", weights='imagenet')  #  20.4M, 300px    
@@ -118,9 +120,9 @@ def fit_frozen(
     
     hist = model.fit(train_ds, validation_data=val_ds, epochs=epochs, callbacks=cb)
     
-    model.save(output_path+'frozen.h5', save_format="h5")
+    model.save(output_path+'/frozen.h5', save_format="h5")
     unfreeze_model(model, lr=out_lr, num_classes=num_classes, layers_to_unfreeze=layers_to_unfreeze)
-    model.save(output_path+'unfrozen.h5', save_format="h5")
+    model.save(output_path+'/unfrozen.h5', save_format="h5")
 
     return(hist, model)
 
@@ -179,10 +181,10 @@ def fit_progressive(
             epoch_test_loss = float(model.evaluate(test_ds, batch_size=batch_size)[0]) # check on non-augmented test data to see if best epoch
             if epoch_test_loss <= lowest_loss: # save model only if current validation loss is as good as or better than all previous epochs
                 lowest_loss = epoch_test_loss # update new best val_acc
-                model.save(output_path+savefile+'_'+str(target_shape)+'px_best.h5', save_format="h5")
-                print('New best-performing epoch of model (size = {}px) saved as: {}'.format(target_shape, output_path+savefile+'_'+str(target_shape)+'px_best.h5'))
+                model.save(output_path+'/'+savefile+'_'+str(target_shape)+'px_best.h5', save_format="h5")
+                print('New best-performing epoch of model (size = {}px) saved as: {}'.format(target_shape, output_path+'/'+savefile+'_'+str(target_shape)+'px_best.h5'))
 
-    model.save(output_path+savefile+'_'+str(target_shape)+'px_final.h5', save_format="h5") # save final epoch as well
-    print('Final model at epoch {} of model (size = {}px) saved as: {}'.format(total_epochs, target_shape, output_path+savefile+'_'+str(target_shape)+'px_final'))
+    model.save(output_path+'/'+savefile+'_'+str(target_shape)+'px_final.h5', save_format="h5") # save final epoch as well
+    print('Final model at epoch {} of model (size = {}px) saved as: {}'.format(total_epochs, target_shape, output_path+'/'+savefile+'_'+str(target_shape)+'px_final'))
     hhs = {kk: np.ravel([hh.history[kk] for hh in histories]).astype("float").tolist() for kk in history.history.keys()}
     return(hhs, model)

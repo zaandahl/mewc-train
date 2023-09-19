@@ -1,8 +1,8 @@
 SEED: 12345 # random seed for reproducibility
-MODEL: 'EN-V2S' # 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename
-CLW: 512 # width of the compression bottleneck layer (use 256 for B0, 512 for others)
-LUF: 360 # Layers to Unfreeze: last two two blocks only set as trainable: 
-# B0 : blocks 5/6: LUF = 193 or EN-V2S : LUF = 360 or EN-V2M : blocks 6/7 : LUF = 345 or EN-V2L : LUF = 480
+MODEL: 'EN-B0' # 'MN-V3-S', 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename
+CLW: 256 # width of the compression bottleneck layer (use 128 for MN-V3-5, 256 for B0, 512 for others)
+LUF: 193 # Layers to Unfreeze: last two two blocks only set as trainable: 
+# MN-V3-S : blocks 9/10: LUF = 53 or B0 : blocks 5/6: LUF = 193 or EN-V2S : LUF = 360 or EN-V2M : blocks 6/7 : LUF = 345 or EN-V2L : LUF = 480
 SAVEFILE: 'mewc_ENV2S_10class' # filename to save model
 
 TRAIN_PATH: '/data/train' # path to training data
@@ -24,11 +24,11 @@ DROPOUTS: # Dropout rates, adjusted progressively
   - 0.10
   - 0.20
   - 0.30
-SHAPES: # Image sizes: EN-B0 = 224, EN-V2S = 300, EN-V2M = 384, EN-V2L = 480
-  - 300
-  - 300
-  - 300
+SHAPES: # Image sizes: MN-V3-S = 224, EN-B0 = 224, EN-V2S = 300, EN-V2M = 384, EN-V2L = 480
+  - 224
+  - 224
+  - 224
 BATCH_SIZES: # Mini-batch sizes (depends on GPU memory)
-  - 48
-  - 48
-  - 48
+  - 4
+  - 4
+  - 4
