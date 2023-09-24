@@ -62,8 +62,8 @@ Note that for the `MAGNITUDES`, `DROPOUTS`, `SHAPES` and `BATCH_SIZES` variables
 | ---------|---------|------------ |
 | SEED | 12345 | random seed for reproducibility |
 | MODEL | 'EN-B0' | 'MN-V3-S', 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename |
-| CLW | 256 | width of the compression bottleneck layer (use 128 for MN-V3-5, 256 for B0, 512 for others) |
-| LUF | 193 | Layers to Unfreeze: last two two blocks only set as trainable:  |
+| CLW | 256 | width of the compression bottleneck layer (MN-V3-5 = 128, BO = 256, 512 for others) |
+| LUF | 193 | Layers to Unfreeze: MN-V3-S = 53, B0 = 193, EN-V2S = 360, EN-V2M = 345, EN-V2L = 480 |
 | SAVEFILE | 'mewc_ENV2S_10class' | filename to save model |
 | TRAIN_PATH | '/data/train' | path to training data |
 | TEST_PATH | '/data/test' | path to test data |
