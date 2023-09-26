@@ -14,7 +14,9 @@ config = read_yaml("config.yaml")
 for conf_key, value in config.items():
     if conf_key in os.environ:
         env_val = os.environ[conf_key]
-        if isinstance(value, list) and all(isinstance(item, int) for item in value):
+        if isinstance(config[conf_key], int):  # If the default is an integer
+            config[conf_key] = int(os.environ[conf_key])
+        elif isinstance(value, list) and all(isinstance(item, int) for item in value):
             config[conf_key] = [int(x) for x in env_val.split(',')]
         else:
             config[conf_key] = env_val
