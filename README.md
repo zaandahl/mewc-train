@@ -52,7 +52,7 @@ docker run --env CUDA_VISIBLE_DEVICES=0 --gpus all \
 
 The following environment variables are supported for configuration (and their default values are shown). Simply omit any variables you don't need to change and if you want to just use all defaults you can leave `--env-file $ENV_FILE` out of the command alltogether. 
 
-The main volume mount in the docker command above maps your local data directory to the `/data` directory in the container. The default values below assume you have a directory structure as shown above.
+The main volume mount in the docker command above maps your local data directory to the `/data` directory in the container. The default values below assume you have a directory structure as shown above. Remember that all paths are relative inside of the Docker container so `/data` exists in the container and is not a local path on your machine.
 
 Output from the container will be saved in the `/data/output` directory. The model file will be saved as `mewc_ENV2S_10class.h5` where `ENV2S` is the model type and `10class` is the number of classes. The output CSV file will be saved as `mewc_ENV2S_10class.csv`. Additionally the container will save a frozen and unfrozen version of the model after initially training upon ImageNet. These files are simply saved as `frozen.h5` and `unfrozen.h5` and are used to initialize the progressive training stages. The best performing model after each progressive stage is saved as `mewc_ENV2S_10class_224px_best.h5` where `224px` is the image size used for that stage.
 
@@ -61,13 +61,13 @@ Note that for the `MAGNITUDES`, `DROPOUTS`, `SHAPES` and `BATCH_SIZES` variables
 | Variable | Default | Description |
 | ---------|---------|------------ |
 | SEED | 12345 | random seed for reproducibility |
-| MODEL | 'EN-B0' | 'MN-V3-S', 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename |
+| MODEL | EN-B0 | MN-V3-S, EN-B0, EN-V2S, EN-V2M, EN-V2L, or else supply base-model filename |
 | CLW | 256 | width of the compression bottleneck layer (MN-V3-5 = 128, BO = 256, 512 for others) |
 | LUF | 193 | Layers to Unfreeze: MN-V3-S = 53, B0 = 193, EN-V2S = 360, EN-V2M = 345, EN-V2L = 480 |
-| SAVEFILE | 'mewc_ENV2S_10class' | filename to save model |
-| TRAIN_PATH | '/data/train' | path to training data |
-| TEST_PATH | '/data/test' | path to test data |
-| OUTPUT_PATH | '/data/output' | path to save output |
+| SAVEFILE | mewc_ENV2S_10class | filename to save model |
+| TRAIN_PATH | /data/train | path to training data |
+| TEST_PATH | /data/test | path to test data |
+| OUTPUT_PATH | /data/output | path to save output |
 | N_SAMPLES | 4000 | number of samples to use for training per class |
 | FROZ_EPOCH | 15 | number of epochs to train frozen model to converge the dense classifier |
 | PROG_STAGE_LEN | 10 | progressive number of epochs prior to final sequence |
