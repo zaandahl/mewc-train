@@ -10,10 +10,14 @@ from lib_model import build_classifier, fit_frozen, fit_progressive, exp_schedul
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=Warning)
 
-config = read_yaml("config.yaml") 
-for conf_key in config.keys():
+config = read_yaml("config.yaml")
+for conf_key, value in config.items():
     if conf_key in os.environ:
-        config[conf_key] = os.environ[conf_key]
+        env_val = os.environ[conf_key]
+        if isinstance(value, list) and all(isinstance(item, int) for item in value):
+            config[conf_key] = [int(x) for x in env_val.split(',')]
+        else:
+            config[conf_key] = env_val
 
 gpus = tf.config.list_physical_devices('GPU')
 if gpus:
