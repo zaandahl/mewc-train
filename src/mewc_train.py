@@ -2,6 +2,7 @@
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import warnings
+import yaml
 import tensorflow as tf
 from tqdm import tqdm
 from lib_data import read_yaml, print_dsinfo, create_train, create_fixed, create_tensorset
@@ -30,11 +31,20 @@ if gpus:
 else:
     strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
 
+if not os.path.exists(config['OUTPUT_PATH']):
+    os.makedirs(config['OUTPUT_PATH'])
+
 train_df, num_classes = create_train(
     config['TRAIN_PATH'],
     seed=config['SEED'],
     ns=config['N_SAMPLES']
 )
+classes = train_df['Label'].unique()
+class_map = {name: idx for idx, name in enumerate(classes)}
+print('Saving class list to ' + config['CLASSLIST'])
+with open(os.path.join(config['OUTPUT_PATH'], config['CLASSLIST']), 'w') as file:
+    yaml.dump(class_map, file, default_flow_style=False)
+
 print_dsinfo(train_df, 'Training Data')
 print('Number of classes: {}'.format(num_classes))
 
@@ -48,9 +58,6 @@ test_df = create_tensorset(
         magnitude=0, # no augmentation on test set
         ds_name="test" # set to test to turn off augmentation, or train or validation to include it
 )
-
-if not os.path.exists(config['OUTPUT_PATH']):
-    os.makedirs(config['OUTPUT_PATH'])
 
 with strategy.scope(): # This first trains the DenseNet(s), but leaves the base model frozen, to avoid catastrophic cascades into the base layers
     en_model = build_classifier(nc=num_classes, mod=config['MODEL'], size=config['SHAPES'][0], compression=config['CLW'], lr=5e-5, dr=0.1) # use high LR and low DR on frozen model

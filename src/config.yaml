@@ -3,7 +3,8 @@ MODEL: 'EN-B0' # 'MN-V3-S', 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply
 CLW: 256 # width of the compression bottleneck layer (use 128 for MN-V3-5, 256 for B0, 512 for others)
 LUF: 193 # Layers to Unfreeze: last two two blocks only set as trainable: 
 # MN-V3-S : blocks 9/10: LUF = 53 or B0 : blocks 5/6: LUF = 193 or EN-V2S : LUF = 360 or EN-V2M : blocks 6/7 : LUF = 345 or EN-V2L : LUF = 480
-SAVEFILE: 'mewc_ENV2S_10class' # filename to save model
+SAVEFILE: 'mewc_model' # filename to save model
+CLASSLIST: 'class_list.yaml' # filename to save class list
 
 TRAIN_PATH: '/data/train' # path to training data
 TEST_PATH: '/data/test' # path to test data
