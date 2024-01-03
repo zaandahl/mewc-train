@@ -6,7 +6,7 @@ import yaml
 import tensorflow as tf
 from tqdm import tqdm
 from lib_data import read_yaml, print_dsinfo, create_train, create_fixed, create_tensorset
-from lib_model import build_classifier, fit_frozen, fit_progressive, exp_scheduler
+from lib_model import build_classifier, fit_frozen, fit_progressive, exp_scheduler, calc_class_metrics
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 warnings.simplefilter(action='ignore', category=Warning)
@@ -91,7 +91,7 @@ for i in tqdm(range(config['PROG_TOT_EPOCH'])):
     prog_train.append(train_tmp)
     prog_val.append(val_df) # validation images remain constant (but are augmented each progress iteration)
 
-prog_hists, en_model = fit_progressive(
+prog_hists, en_model, best_model_fpath = fit_progressive(
         en_model,
         prog_train,
         prog_val,
@@ -108,3 +108,11 @@ prog_hists, en_model = fit_progressive(
     )
 
 print("Final Epoch: test loss, test acc:", en_model.evaluate(test_df, batch_size=config['BATCH_SIZES'][0]))
+
+calc_class_metrics(
+    model_fpath = best_model_fpath,
+    classes = classes,
+    batch_size = config["BATCH_SIZES"][0],
+    image_size = config["SHAPES"][0],
+    output_path = config['OUTPUT_PATH']
+    )
