@@ -42,7 +42,7 @@ data
 The train data directory must contain at least one subdirectory with images for each class. The test data directory should be structured the same way and contain images for testing the model after training.
 
 ```
-docker pull zaandahl/mewc-train:v1.0
+docker pull zaandahl/mewc-train
 docker run --env CUDA_VISIBLE_DEVICES=0 --gpus all \ 
     --env-file "$ENV_FILE" \
     --interactive --tty --rm \
