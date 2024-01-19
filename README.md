@@ -57,6 +57,8 @@ Upon successful completion of training with mewc-train, two primary outputs will
 
 2. Class List (`class_list.yaml`): A YAML file that provides a mapping between class names and class IDs. This is especially vital to ensure that predictions made by the model are correctly associated with their respective class names.
 
+3. Confusion Matrix (`confusion_matrix.png`): A confusion matrix is a table used in machine learning to evaluate the performance of a classification model. The confusion matrix helps in understanding how well the model is classifying instances into different classes. By examining the confusion matrix, you can identify which classes are being misclassified and understand the patterns of errors. This file is not required for making predictions.
+
 When using `mewc-predict`, it expects both `mewc_model.h5` and `class_list.yaml` to be available. This ensures seamless predictions and accurate class labeling. Ensure you maintain the integrity of these files and store them securely to make the most out of your trained model.
 
 ## Config Options
