@@ -1,12 +1,12 @@
-import os, os.path, yaml, imgaug
+import os, os.path, yaml
 import pandas as pd
 import tensorflow as tf
+import warnings
 
+from keras_cv.layers import RandAugment
 from pathlib import Path
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-from imgaug import augmenters as iaa
 
-imgaug.seed(12345) # set the global aug seed
 
 # Reads a yaml file and returns a dictionary
 def read_yaml(file_path):
@@ -65,27 +65,27 @@ def create_tensorset(in_df, img_size, batch_size, magnitude, ds_name="train"):
         img = tf.image.convert_image_dtype(img, tf.uint8)
         img = tf.image.resize(img, size=(img_size, img_size))
         return img
-    
-    def augment(images):
-        # Input to `augment()` is a TensorFlow tensor which
-        # is not supported by `imgaug`. This is why we first
-        # convert it to its `numpy` variant.
-        images = tf.cast(images, tf.uint8)
-        return rand_aug(images=images.numpy())
 
     in_path = in_df['File']
     in_class = LabelEncoder().fit_transform(in_df['Label'].values)
 
     in_class = in_class.reshape(len(in_class), 1)
-    in_class = OneHotEncoder(sparse=False).fit_transform(in_class)
-    rand_aug = iaa.RandAugment(n=3, m=magnitude)
+    in_class = OneHotEncoder(sparse_output=False).fit_transform(in_class)
+
+    # If the magnitude is out of bounds, raise an error to notify
+    if not ((magnitude / 10) >= 0 and (magnitude / 10) <= 1):
+        magnitude = 5
+        warnings.warn("Magnitude is out of bounds, default value set to 5", Warning)
+
+    # using keras_cv random augmentation technique with 3 augmentations per image and magnitude ranging [0,1]     
+    rand_aug = RandAugment(value_range=(0, 255),augmentations_per_image=3, magnitude=magnitude/10)
 
     # convert to dataset
     if ds_name == "train" or ds_name == "validation":
         ds = (tf.data.Dataset.from_tensor_slices((in_path, in_class))
             .map(lambda img_path, img_class: (load(img_path), img_class))
             .batch(batch_size)
-            .map(lambda img, img_class: (tf.py_function(augment, [img], [tf.float32])[0], img_class), num_parallel_calls=tf.data.AUTOTUNE,)
+            .map(lambda img, img_class: (rand_aug(tf.cast(img, tf.uint8)), img_class), num_parallel_calls=tf.data.AUTOTUNE,)
             .prefetch(tf.data.AUTOTUNE)
         )
     else:
