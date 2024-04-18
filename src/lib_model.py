@@ -1,6 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import tensorflow_addons as tfa
 
 from tensorflow import keras
 from keras.models import Sequential, load_model
@@ -8,6 +7,8 @@ from keras import layers
 from keras.layers import Dense, Dropout
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 from keras.applications import mobilenet_v3, efficientnet_v2
+from keras_cv.losses import FocalLoss
+from keras.losses import CategoricalFocalCrossentropy
 
 from lib_data import create_tensorset
 
@@ -32,7 +33,7 @@ def build_classifier(nc, mod, size, compression, lr, dr):
         loss_f = 'binary_crossentropy'
         act_f = 'sigmoid'
     else:
-        loss_f = tfa.losses.SigmoidFocalCrossEntropy() # use tfa.losses.SigmoidFocalCrossEntropy()
+        loss_f = FocalLoss() # use keras.losses.CategoricalFocalCrossentropy or keras_cv.losses.FocalLoss()
         act_f = 'softmax'
     
     if mod == 'MN-V3-S':
@@ -66,7 +67,7 @@ def unfreeze_model(model, lr, num_classes, layers_to_unfreeze):
     if num_classes == 2:
         loss_f = 'binary_crossentropy'
     else:
-        loss_f = tfa.losses.SigmoidFocalCrossEntropy() # use tfa.losses.SigmoidFocalCrossEntropy() or polyl_cross_entropy
+        loss_f = FocalLoss() # use keras.losses.CategoricalFocalCrossentropy or keras_cv.losses.FocalLoss()
 
     # Both the whole model and specific layers need to be trainable
     # So make whole model trainable, then aftewards freeze all layers you don't want to train
@@ -204,7 +205,7 @@ def calc_class_metrics(
 ):
     # load model and classes
     print(f"Calculating class-specific metrics for best model '{model_fpath}'")
-    loaded_model = load_model(model_fpath, custom_objects={'loss': tfa.losses.SigmoidFocalCrossEntropy()})
+    loaded_model = load_model(model_fpath, custom_objects={'loss': FocalLoss()})
     class_map = {name: idx for idx, name in enumerate(classes)}
     inv_class = {v: k for k, v in class_map.items()}
     class_ids = sorted(inv_class.values())
