@@ -1,5 +1,5 @@
 # set base image (host OS)
-FROM zaandahl/mewc-flow:1.0.10
+FROM zaandahl/mewc-flow:1.0.11
 
 # set the working directory in the container
 WORKDIR /code
