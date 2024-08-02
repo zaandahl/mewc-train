@@ -103,7 +103,13 @@ def create_train(ds_path, seed=12345, ns=1000, custom_sample=False, custom_file=
             ds_df = pd.concat([ds_filepaths, ds_labels], axis=1)
             
             ds_df = ds_df.sample(frac=1, random_state=seed).reset_index(drop=True) # Randomising and resetting indexes
-            ds_df = ds_df.groupby('Label').apply(lambda x: x.sample(n=n, replace=len(x) < n)) # Sampling n images from each class
+            #ds_df = ds_df.groupby('Label').apply(lambda x: x.sample(n=n, replace=len(x) < n)) # Sampling n images from each class
+            # replacing line above to addressdeprecation warning
+            sampled_dfs = []
+            for name, group in ds_df.groupby('Label'):
+                sampled_dfs.append(group.sample(n=n, replace=len(group) < n, random_state=seed))
+            ds_df = pd.concat(sampled_dfs).reset_index(drop=True)
+
             return ds_df
     
     train_df = create_dataframe(ds_path, ns, seed)

@@ -1,5 +1,16 @@
 import unittest
 import os
+import warnings
+
+# Suppress TensorFlow logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+
+# Suppress other specific warnings
+warnings.filterwarnings("ignore", message="Unable to register cuFFT factory")
+warnings.filterwarnings("ignore", message="Unable to register cuDNN factory")
+warnings.filterwarnings("ignore", message="Unable to register cuBLAS factory")
+
 import pandas as pd
 import tensorflow as tf
 from unittest.mock import patch, mock_open, MagicMock
@@ -49,10 +60,15 @@ class TestLibData(unittest.TestCase):
         mock_exists.return_value = True
         mock_isdir.return_value = True
         mock_listdir.side_effect = [
-            ['class1', 'class2'],
-            ['image1.jpg', 'image2.png'],
-            ['image3.jpg', 'image4.png'],
-            ['image5.jpg']
+            ['class1', 'class2'],  # First call for train_path
+            ['image1.jpg', 'image2.png'],  # Second call for class1 in train_path
+            ['image3.jpg', 'image4.png'],  # Third call for class2 in train_path
+            ['class1', 'class2'],  # Fourth call for val_path
+            ['image1.jpg', 'image2.png'],  # Fifth call for class1 in val_path
+            ['image3.jpg', 'image4.png'],  # Sixth call for class2 in val_path
+            ['class1', 'class2'],  # Seventh call for test_path
+            ['image1.jpg', 'image2.png'],  # Eighth call for class1 in test_path
+            ['image3.jpg', 'image4.png']  # Ninth call for class2 in test_path
         ]
 
         validate_directory_structure('train_path', 'val_path', 'test_path')
@@ -64,9 +80,16 @@ class TestLibData(unittest.TestCase):
         })
         with patch('builtins.print') as mocked_print:
             print_dsinfo(ds_df, 'test_dataset')
-            mocked_print.assert_any_call('Dataset: test_dataset')
-            mocked_print.assert_any_call('Number of images in the dataset: 3')
-            mocked_print.assert_any_call("class1    2\nclass2    1\nName: Label, dtype: int64")
+            actual_calls = [call.args[0] for call in mocked_print.call_args_list]
+            expected_calls = [
+                'Dataset: test_dataset',
+                'Number of images in the dataset: 3',
+                'Label\nclass1    2\nclass2    1\nName: count, dtype: int64\n'
+            ]
+            for expected, actual in zip(expected_calls, actual_calls):
+                print(f"Expected: {expected}")
+                print(f"Actual: {actual}")
+            self.assertEqual(expected_calls, actual_calls)
 
     @patch('lib_data.Path.glob')
     def test_create_train(self, mock_glob):
@@ -91,3 +114,4 @@ class TestLibData(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
