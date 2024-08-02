@@ -1,6 +1,0 @@
-services:
-  app:
-    image: zaandahl/mewc-train
-    build:
-      context: .
-      dockerfile: ./Dockerfile

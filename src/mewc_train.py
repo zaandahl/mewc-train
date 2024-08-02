@@ -1,118 +1,71 @@
 # Fit classifier with frozen base model then fine-tune progressively
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-import warnings
-import yaml
+import os, yaml
+os.environ["KERAS_BACKEND"] = "jax"
 import tensorflow as tf
-from tqdm import tqdm
-from lib_data import read_yaml, print_dsinfo, create_train, create_fixed, create_tensorset
-from lib_model import build_classifier, fit_frozen, fit_progressive, exp_scheduler, calc_class_metrics
+print("\nTensorFlow version:", tf.__version__)
 
-warnings.simplefilter(action='ignore', category=FutureWarning)
-warnings.simplefilter(action='ignore', category=Warning)
+from tqdm import tqdm # for progress bar
+from lib_common import update_config_from_env, model_img_size_mapping, read_yaml, configure_logging, setup_strategy
+from lib_model import build_classifier, fit_frozen, fit_progressive, calc_class_metrics
+from lib_data import print_dsinfo, create_train, create_fixed, process_custom_sample_file, ensure_output_directory, validate_directory_structure
 
-config = read_yaml("config.yaml")
-for conf_key, value in config.items():
-    if conf_key in os.environ:
-        env_val = os.environ[conf_key]
-        if isinstance(config[conf_key], int):  # If the default is an integer
-            config[conf_key] = int(os.environ[conf_key])
-        elif isinstance(value, list) and all(isinstance(item, int) for item in value):
-            config[conf_key] = [int(x) for x in env_val.split(',')]
-        else:
-            config[conf_key] = env_val
+configure_logging() # Set the environment variable to allow INFO messages but supress WARNING messages
+config = update_config_from_env(read_yaml("config.yaml"))
+custom_sample_file, is_custom_sample = process_custom_sample_file(read_yaml("class_samples.yaml"))
 
-gpus = tf.config.list_physical_devices('GPU')
-if gpus:
-    if len(gpus) > 1:
-        strategy = tf.distribute.MirroredStrategy(devices=gpus, cross_device_ops=tf.distribute.HierarchicalCopyAllReduce())
-    else:
-        strategy = tf.distribute.OneDeviceStrategy(device="/gpu:0")
-else:
-    strategy = tf.distribute.OneDeviceStrategy(device="/cpu:0")
+strategy = setup_strategy() # Set up the strategy for distributed training
+output_fpath = os.path.join(config['OUTPUT_PATH'], config['SAVEFILE'], config['MODEL'])
+ensure_output_directory(output_fpath)
+validate_directory_structure(config['TRAIN_PATH'], config['VAL_PATH'], config['TEST_PATH'])
 
-if not os.path.exists(config['OUTPUT_PATH']):
-    os.makedirs(config['OUTPUT_PATH'])
+img_size = model_img_size_mapping(config['MODEL'])
 
 train_df, num_classes = create_train(
     config['TRAIN_PATH'],
     seed=config['SEED'],
-    ns=config['N_SAMPLES']
+    ns=custom_sample_file['default'], custom_sample=is_custom_sample, custom_file=custom_sample_file
 )
 classes = train_df['Label'].unique()
 class_map = {name: idx for idx, name in enumerate(classes)}
-print('Saving class list to ' + config['CLASSLIST'])
-with open(os.path.join(config['OUTPUT_PATH'], config['CLASSLIST']), 'w') as file:
+df_size = train_df.shape[0]
+
+with open(os.path.join(output_fpath, config['SAVEFILE']+'_class_map.yaml'), 'w') as file:
     yaml.dump(class_map, file, default_flow_style=False)
 
+print('Number of classes: {}'.format(num_classes) + '\n')
 print_dsinfo(train_df, 'Training Data')
-print('Number of classes: {}'.format(num_classes))
 
-val_df = create_fixed(config['TEST_PATH']) # create a fixed validation set (also used for creating the non-augmented test set)
+val_df = create_fixed(config['VAL_PATH']) # No image augmentation and fixed structure, for validation
 print_dsinfo(val_df, 'Validation Data')
 
-test_df = create_tensorset(
-        val_df.sample(frac=1).reset_index(drop=True), 
-        img_size=config['SHAPES'][0], 
-        batch_size=config['BATCH_SIZES'][0], 
-        magnitude=0, # no augmentation on test set
-        ds_name="test" # set to test to turn off augmentation, or train or validation to include it
-)
+with strategy.scope(): # Trains the Dense classifier, but leaves the base model frozen, to avoid catastrophic cascades
+    model = build_classifier(config, num_classes, df_size, img_size)
+    frozen_hist, model = fit_frozen(config, model, train_df, val_df, num_classes, df_size, img_size)
+model.summary() # print model summary
 
-with strategy.scope(): # This first trains the DenseNet(s), but leaves the base model frozen, to avoid catastrophic cascades into the base layers
-    en_model = build_classifier(nc=num_classes, mod=config['MODEL'], size=config['SHAPES'][0], compression=config['CLW'], lr=5e-5, dr=0.1) # use high LR and low DR on frozen model
-
-    frozen_hist, en_model = fit_frozen(
-        en_model,
-        num_classes,
-        epochs=config['FROZ_EPOCH'],
-        target_shape=config['SHAPES'][0],
-        dropout=config['DROPOUTS'][0],
-        magnitude=config['MAGNITUDES'][0],
-        batch_size=config['BATCH_SIZES'][0],
-        output_path=config['OUTPUT_PATH'],
-        train_df=train_df,
-        val_df=val_df,
-        layers_to_unfreeze=config['LUF'] # -1 unfreezes the whole model, 0 freezes base model, select 1 or greater to unfreeze n layers (blocks, see config comments)
-)
-
-print("Total trainable base-model layers: {}".format(len(en_model.layers[0].trainable_weights))) 
-print("Frozen model: test loss, test acc:", en_model.evaluate(test_df, batch_size=config['BATCH_SIZES'][0]))
-en_model.summary() # print model summary
-
-prog_train = [] # store training samples for each epoch
-prog_val = []  # store validation samples for each epoch
+print('\nCreating datasets for progressive training...')
+prog_train = [] # store training data samples for each epoch
 for i in tqdm(range(config['PROG_TOT_EPOCH'])):
     train_tmp, num_classes = create_train(
         config['TRAIN_PATH'],
-        seed=config['SEED'] + i * config['SEED'],
-        ns=config['N_SAMPLES']
+        seed=(config['SEED']+i), # change seed for each progress iteration
+        ns=custom_sample_file['default'], custom_sample=is_custom_sample, custom_file=custom_sample_file
     )
     prog_train.append(train_tmp)
-    prog_val.append(val_df) # validation images remain constant (but are augmented each progress iteration)
 
-prog_hists, en_model, best_model_fpath = fit_progressive(
-        en_model,
-        prog_train,
-        prog_val,
-        test_df,
-        savefile=config['SAVEFILE'],
-        output_path=config['OUTPUT_PATH'],
-        lr_scheduler=exp_scheduler,
-        total_epochs=config['PROG_TOT_EPOCH'],
-        prog_stage_len=config['PROG_STAGE_LEN'],
-        magnitudes=config['MAGNITUDES'],
-        dropouts=config['DROPOUTS'],
-        target_shapes=config['SHAPES'],    
-        batch_sizes=config['BATCH_SIZES']
+prog_hists, model, best_model_fpath = fit_progressive(
+        config, model,
+        train_df = prog_train,
+        val_df = val_df,
+        output_fpath = output_fpath,
+        img_size = img_size
     )
-
-print("Final Epoch: test loss, test acc:", en_model.evaluate(test_df, batch_size=config['BATCH_SIZES'][0]))
 
 calc_class_metrics(
     model_fpath = best_model_fpath,
+    test_fpath = config['TEST_PATH'],
+    output_fpath = output_fpath,
     classes = classes,
-    batch_size = config["BATCH_SIZES"][0],
-    image_size = config["SHAPES"][0],
-    output_path = config['OUTPUT_PATH']
+    batch_size = config["BATCH_SIZE"],
+    img_size = img_size
     )
