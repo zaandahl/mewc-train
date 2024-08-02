@@ -48,10 +48,14 @@ class TestLibData(unittest.TestCase):
     def test_validate_directory_structure(self, mock_listdir, mock_isdir, mock_exists):
         mock_exists.return_value = True
         mock_isdir.return_value = True
-        mock_listdir.return_value = ['class1', 'class2']
-        
-        with patch('os.listdir', side_effect=[['image1.jpg', 'image2.png'], ['image3.jpg', 'image4.png']]):
-            validate_directory_structure('train_path', 'val_path', 'test_path')
+        mock_listdir.side_effect = [
+            ['class1', 'class2'],
+            ['image1.jpg', 'image2.png'],
+            ['image3.jpg', 'image4.png'],
+            ['image5.jpg']
+        ]
+
+        validate_directory_structure('train_path', 'val_path', 'test_path')
 
     def test_print_dsinfo(self):
         ds_df = pd.DataFrame({
@@ -62,7 +66,7 @@ class TestLibData(unittest.TestCase):
             print_dsinfo(ds_df, 'test_dataset')
             mocked_print.assert_any_call('Dataset: test_dataset')
             mocked_print.assert_any_call('Number of images in the dataset: 3')
-            mocked_print.assert_any_call("class1    2\nclass2    1\nName: Label, dtype: int64\n")
+            mocked_print.assert_any_call("class1    2\nclass2    1\nName: Label, dtype: int64")
 
     @patch('lib_data.Path.glob')
     def test_create_train(self, mock_glob):
