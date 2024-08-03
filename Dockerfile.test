@@ -14,8 +14,9 @@ RUN pip install pytest
 COPY src/ /code
 
 ENV PYTHONPATH="${PYTHONPATH}:/code"
-ENV TF_CPP_MIN_LOG_LEVEL=2
+ENV TF_CPP_MIN_LOG_LEVEL=3
 ENV TF_ENABLE_ONEDNN_OPTS=0
+ENV CUDA_VISIBLE_DEVICES=0
 
 # Run the tests using unittest
 CMD ["python", "-m", "unittest", "discover", "-s", "test", "-p", "*.py"]
