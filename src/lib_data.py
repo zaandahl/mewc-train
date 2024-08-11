@@ -1,4 +1,8 @@
 import os, sys, warnings
+import absl.logging
+# Suppress TensorFlow and absl logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+absl.logging.set_verbosity(absl.logging.ERROR)
 import tensorflow as tf
 import pandas as pd
 from keras_cv import layers

@@ -2,6 +2,7 @@ services:
   app:
     build:
       context: .
-      dockerfile: ./Dockerfile.test
+      dockerfile: ./Dockerfile
     volumes:
       - ./test:/code/test
+    command: ["python", "-m", "unittest", "discover", "-s", "test", "-p", "*.py"]
