@@ -14,12 +14,17 @@ def ensure_output_directory(path):
 
 def process_samples_from_config(config):
     custom_sample_file_temp = {}
-    for entry in config["CLASS_SAMPLES_SPECIFIC"]:
+    # Add the default value if it exists
+    if 'CLASS_SAMPLES_DEFAULT' in config:
+        custom_sample_file_temp['default'] = config['CLASS_SAMPLES_DEFAULT']
+    # Process the specific samples
+    for entry in config.get("CLASS_SAMPLES_SPECIFIC", []):
         class_name = entry["CLASS"]
         num_samples = entry["SAMPLES"]
         custom_sample_file_temp[class_name] = num_samples
     is_custom_sample = True if custom_sample_file_temp else False
     return custom_sample_file_temp, is_custom_sample
+
 
 def process_custom_sample_file(custom_sample_file):
     is_custom_sample = len(custom_sample_file) > 1
