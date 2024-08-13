@@ -2,6 +2,9 @@ import unittest
 from unittest.mock import patch, MagicMock
 import pandas as pd
 import os
+import absl.logging
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+absl.logging.set_verbosity(absl.logging.ERROR)
 import tensorflow as tf
 from pathlib import Path
 from lib_data import (ensure_output_directory, process_custom_sample_file, check_upload_format, validate_directory_structure, 
