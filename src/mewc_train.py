@@ -1,7 +1,6 @@
 # Fit classifier with frozen base model then fine-tune progressively
 import os, yaml
 import absl.logging
-# Suppress TensorFlow and absl logging
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 absl.logging.set_verbosity(absl.logging.ERROR)
 os.environ["KERAS_BACKEND"] = "jax"
@@ -9,11 +8,10 @@ import tensorflow as tf
 print("\nTensorFlow version:", tf.__version__)
 
 from tqdm import tqdm # for progress bar
-from lib_common import update_config_from_env, model_img_size_mapping, read_yaml, configure_logging, setup_strategy
+from lib_common import update_config_from_env, model_img_size_mapping, read_yaml, setup_strategy
 from lib_model import build_classifier, fit_frozen, fit_progressive, calc_class_metrics
 from lib_data import print_dsinfo, create_train, create_fixed, process_custom_sample_file, ensure_output_directory, validate_directory_structure
 
-configure_logging() # Set the environment variable to allow INFO messages but supress WARNING messages
 config = update_config_from_env(read_yaml("config.yaml"))
 custom_sample_file, is_custom_sample = process_custom_sample_file(read_yaml("class_samples.yaml"))
 
