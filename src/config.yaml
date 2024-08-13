@@ -41,10 +41,10 @@ DROPOUTS: # Stochastic dropout (0-1 range), increased in stages: drops random pr
 CLASS_SAMPLES_DEFAULT: 4000
 
 # Use list of dicts for specificity to allow for mapping sample counts to classes
-CLASS_SAMPLES_SPECIFIC:
-  - SAMPLES: 3000
-    CLASSES: [13, 11]
-  - SAMPLES: 2000
-    CLASSES: [3]
-  - SAMPLES: 1000
-    CLASSES: [1, 2, 7]
+# CLASS_SAMPLES_SPECIFIC:
+#   - SAMPLES: 3000
+#     CLASSES: [13, 11]
+#   - SAMPLES: 2000
+#     CLASSES: [3]
+#   - SAMPLES: 1000
+#     CLASSES: [1, 2, 7]
