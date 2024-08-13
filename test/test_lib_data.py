@@ -24,12 +24,12 @@ class TestLibData(unittest.TestCase):
         config = {
             'CLASS_SAMPLES_DEFAULT': 10,
             'CLASS_SAMPLES_SPECIFIC': [
-                {'SAMPLES': 5, 'CLASSES': ['class1', 'class2']},
-                {'SAMPLES': 3, 'CLASSES': ['class3']}
+                {'SAMPLES': 5, 'CLASS': 'class1'},
+                {'SAMPLES': 5, 'CLASS': 'class2'},
+                {'SAMPLES': 3, 'CLASS': 'class3'}
             ]
         }
         expected_result = {
-            'default': 10,
             'class1': 5,
             'class2': 5,
             'class3': 3
@@ -37,6 +37,7 @@ class TestLibData(unittest.TestCase):
         result, is_custom_sample = process_samples_from_config(config)
         self.assertEqual(result, expected_result)
         self.assertTrue(is_custom_sample)
+
 
     def test_process_custom_sample_file(self):
         custom_sample_file = {
