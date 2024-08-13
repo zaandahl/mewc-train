@@ -7,7 +7,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 absl.logging.set_verbosity(absl.logging.ERROR)
 import tensorflow as tf
 from pathlib import Path
-from lib_data import (ensure_output_directory, process_custom_sample_file, check_upload_format, validate_directory_structure, 
+from lib_data import (ensure_output_directory, process_samples_from_config, process_custom_sample_file, check_upload_format, validate_directory_structure, 
                       print_dsinfo, create_dataframe, create_train, create_fixed, create_tensorset, load_img)
 
 class TestLibData(unittest.TestCase):
@@ -19,6 +19,24 @@ class TestLibData(unittest.TestCase):
         ensure_output_directory(test_path)
         self.assertTrue(os.path.exists(test_path))
         os.rmdir(test_path)
+
+    def test_process_samples_from_config(self):
+        config = {
+            'CLASS_SAMPLES_DEFAULT': 10,
+            'CLASS_SAMPLES_SPECIFIC': [
+                {'SAMPLES': 5, 'CLASSES': ['class1', 'class2']},
+                {'SAMPLES': 3, 'CLASSES': ['class3']}
+            ]
+        }
+        expected_result = {
+            'default': 10,
+            'class1': 5,
+            'class2': 5,
+            'class3': 3
+        }
+        result, is_custom_sample = process_samples_from_config(config)
+        self.assertEqual(result, expected_result)
+        self.assertTrue(is_custom_sample)
 
     def test_process_custom_sample_file(self):
         custom_sample_file = {

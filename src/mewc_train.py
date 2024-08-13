@@ -10,10 +10,10 @@ print("\nTensorFlow version:", tf.__version__)
 from tqdm import tqdm # for progress bar
 from lib_common import update_config_from_env, model_img_size_mapping, read_yaml, setup_strategy
 from lib_model import build_classifier, fit_frozen, fit_progressive, calc_class_metrics
-from lib_data import print_dsinfo, create_train, create_fixed, process_custom_sample_file, ensure_output_directory, validate_directory_structure
+from lib_data import print_dsinfo, create_train, create_fixed, process_samples_from_config, ensure_output_directory, validate_directory_structure
 
 config = update_config_from_env(read_yaml("config.yaml"))
-custom_sample_file, is_custom_sample = process_custom_sample_file(read_yaml("class_samples.yaml"))
+custom_sample_file, is_custom_sample = process_samples_from_config(config)
 
 strategy = setup_strategy() # Set up the strategy for distributed training
 output_fpath = os.path.join(config['OUTPUT_PATH'], config['SAVEFILE'], config['MODEL'])

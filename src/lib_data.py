@@ -12,10 +12,20 @@ def ensure_output_directory(path):
     if not os.path.exists(path):
         os.makedirs(path)
 
+def process_samples_from_config(config):
+    custom_sample_file_temp = {}
+    custom_sample_file_temp["default"] = config.get("CLASS_SAMPLES_DEFAULT", 4000)
+    specific_samples = config.get("CLASS_SAMPLES_SPECIFIC", [])
+    for entry in specific_samples:
+        num_samples = entry["SAMPLES"]
+        for class_name in entry["CLASSES"]:
+            custom_sample_file_temp[str(class_name)] = int(num_samples)
+    is_custom_sample = bool(specific_samples)
+    return custom_sample_file_temp, is_custom_sample
+
 def process_custom_sample_file(custom_sample_file):
     is_custom_sample = len(custom_sample_file) > 1
     custom_sample_file_temp = {}
-
     for key, values in custom_sample_file.items():
         if key == 'default':
             custom_sample_file_temp[key] = values
