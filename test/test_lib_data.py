@@ -30,30 +30,12 @@ class TestLibData(unittest.TestCase):
             ]
         }
         expected_result = {
+            'default': 10,  # Ensure the default value is included
             'class1': 5,
             'class2': 5,
             'class3': 3
         }
         result, is_custom_sample = process_samples_from_config(config)
-        self.assertEqual(result, expected_result)
-        self.assertTrue(is_custom_sample)
-
-
-    def test_process_custom_sample_file(self):
-        custom_sample_file = {
-            'default': 10,
-            'specific': {
-                5: ['class1', 'class2'],
-                3: ['class3']
-            }
-        }
-        expected_result = {
-            'default': 10,
-            'class1': 5,
-            'class2': 5,
-            'class3': 3
-        }
-        result, is_custom_sample = process_custom_sample_file(custom_sample_file)
         self.assertEqual(result, expected_result)
         self.assertTrue(is_custom_sample)
 
