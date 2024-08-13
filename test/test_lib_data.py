@@ -7,7 +7,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 absl.logging.set_verbosity(absl.logging.ERROR)
 import tensorflow as tf
 from pathlib import Path
-from lib_data import (ensure_output_directory, process_samples_from_config, process_custom_sample_file, check_upload_format, validate_directory_structure, 
+from lib_data import (ensure_output_directory, process_samples_from_config, check_upload_format, validate_directory_structure, 
                       print_dsinfo, create_dataframe, create_train, create_fixed, create_tensorset, load_img)
 
 class TestLibData(unittest.TestCase):
