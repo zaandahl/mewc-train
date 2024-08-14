@@ -15,7 +15,9 @@ VARIABLE=VALUE
 The `mewc-train` Docker image has been updated to version 2. Key updates include:
 
 - **Base Image**: Uses the new `mewc-flow` base image featuring `tensorflow/tensorflow:2.16.1-gpu`, `CUDA`, `cuDNN`, and `JAX`.
-  
+- **Hugging Face Base Models**: Start training off a base model from [Hugging Face](https://huggingface.co/models). 
+- **Improved Training Control**: New user configurable options to fine tune model training.
+
 For users who wish to continue using version 1, the older Dockerfile and requirements can still be accessed by checking out the `v1.0.10` tag:
 
 ```bash
