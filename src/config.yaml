@@ -23,7 +23,7 @@ FROZ_EPOCH: 10 # Number of epochs to train the frozen model: usually ~10 require
 
 BUF: 2 # Blocks to unfreeze for fine-tuning (suggest 1-2 for EN/CN, 5-9 for ViT). Set to 0 to keep base frozen or -1 to train on full model
 PROG_STAGE_LEN: 10  # Number of progressive fine-tuning epochs (see sequence of Magnitudes and Dropouts augmentations below) prior to final stage
-PROG_TOT_EPOCH: 30 # Total number of epochs required will depend on size of CLASS_SAMPLES_[DEFAULT|SPECIFIC] (larger requires fewer epochs per stage)
+PROG_TOT_EPOCH: 60 # Total number of epochs required will depend on size of CLASS_SAMPLES_[DEFAULT|SPECIFIC] (larger requires fewer epochs per stage)
 
 # Regularisation/augmentation lists define the sequence of progressive training stages and must be of same length: default 4 but can add or delete  
 MAGNITUDES: # RandAug magnitudes (range 0-1), increased in stages, details: https://keras.io/api/keras_cv/layers/augmentation/rand_augment/

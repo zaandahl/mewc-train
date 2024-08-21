@@ -108,7 +108,7 @@ Note that for the `MAGNITUDES`, `DROPOUTS`, and other list-type variables, you c
 | FROZ_EPOCH             | 10                                | Number of epochs to train the frozen model before fine-tuning |
 | BUF                    | 2                                 | Blocks to unfreeze for fine-tuning (suggest 1-2 for EN/CN, 5-9 for ViT) |
 | PROG_STAGE_LEN         | 10                                | Number of progressive fine-tuning epochs prior to the final stage |
-| PROG_TOT_EPOCH         | 30                                | Total number of epochs (depends on size of class_samples.yaml) |
+| PROG_TOT_EPOCH         | 60                                | Total number of epochs (depends on size of class_samples.yaml) |
 | MAGNITUDES             | 0.2, 0.4, 0.6, 0.8                | RandAug magnitudes, increased progressively (range 0-1) |
 | DROPOUTS               | 0.1, 0.2, 0.3, 0.4                | Dropout rates, increased progressively (range 0-1) |
 | CLASS_SAMPLES_DEFAULT  | 4000                              | Default number of sample images per class to be trained each epoch |
