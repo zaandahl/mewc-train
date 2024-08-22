@@ -1,35 +1,56 @@
-SEED: 12345 # random seed for reproducibility
-MODEL: 'EN-B0' # 'MN-V3-S', 'EN-B0', 'EN-V2S' 'EN-V2M', 'EN-V2L', or else supply base-model filename
-CLW: 256 # width of the compression bottleneck layer (use 128 for MN-V3-5, 256 for B0, 512 for others)
-LUF: 193 # Layers to Unfreeze: last two two blocks only set as trainable: 
-# MN-V3-S : blocks 9/10: LUF = 53 or B0 : blocks 5/6: LUF = 193 or EN-V2S : LUF = 360 or EN-V2M : blocks 6/7 : LUF = 345 or EN-V2L : LUF = 480
-SAVEFILE: 'mewc_model' # filename to save model
-CLASSLIST: 'class_list.yaml' # filename to save class list
+SEED: 12345 # Random seed for reproducibility of sampled datasets and model initialisation
+MODEL: 'ENB0' # EN:[B0,B2,S,M,L,XL] (e.g. ENS): CN:[P,N,T,S,B,L] (e.g. CNB); ViT:[T,S,B,L] (e.g. ViTS) or pretrained filename e.g. 'ens_pt.keras'
+SAVEFILE: 'case_study' # Filename to save .keras model : MODEL name appended automatically
+OUTPUT_PATH: '/data/output' # Save Path for output files (model, class map, confusion matrix): SAVEFILE/MODEL added automatically to path
 
-TRAIN_PATH: '/data/train' # path to training data
-TEST_PATH: '/data/test' # path to test data
-OUTPUT_PATH: '/data/output' # path to save output
+# Hugging Face Model to initialise weights: replace with custom model if desired or use "NA" in FILENAME to default to ImageNet weights
+# IMPORTANT: Ensure that the model specified below in FILENAME is compatible with the model architecture specified in MODEL!
+REPO_ID: "bwbrook/mewc_pretrained" # Repository ID to be used for subsequent fine-tuning on training data, e.g. "bwbrook/mewc_pretrained"
+FILENAME: "NA" # HF filename to source base model, e.g. "ens_mewc_case_study.keras" or "NA" for no pretrained model
 
-N_SAMPLES: 4000 # number of samples to use for training per class
+TRAIN_PATH: '/data/train' # Path to training data (subfolders for each class)
+TEST_PATH: '/data/test' # Path to hold-out test data (for final model evaluation)
+VAL_PATH: '/data/test' # Path to validation data (optional, for hyperparameter tuning, otherwise set to same as TEST_PATH)
 
-FROZ_EPOCH: 15 # number of epochs to train frozen model to converge the dense classifier
-PROG_STAGE_LEN: 10 # progressive number of epochs prior to final sequence
-PROG_TOT_EPOCH: 50 #  number of epochs required typically depends on size of N_SAMPLES (larger requires fewer epochs per stage)
+OPTIMIZER: 'adamw' # Gradient-based optimisation algorithm. Options: 'adamw' (default: adaptive), 'rmsprop' (simple) or 'lion' (sign-based)
+OPTIM_REG: 1e-4 # Regularisation (weight decay) parameter for optimiser. Default: 1e-4, 0 = off, typical range: 1e-6 (weak) to 1e-2 (strong)
+LR_SCHEDULER: 'expon' # Learning-rate scheduler: 'expon' (monotonic decline), 'cosine' (cyclic, warm restarts), 'polynomial' (cyclic)
+LEARNING_RATE: 1e-4 # Recommended default initial LR: 1e-4, typical range: 1e-5 (slower, steady) to 1e-2 (faster, oscillatory convergence)
+BATCH_SIZE: 16 # Mini-batch size (depends on GPU memory, if memory or kernel error is generated then reduce accordingly, typically 4 to 128)
+NUM_AUG: 3 # Number of per-image random augmentation layers to be applied to the training samples (default: 3, suggested range: 1-5)
 
-# All hyperparameters lists must be of the same length
-MAGNITUDES: # ImgAug magnitudes, adjusted progressively
-  - 5
-  - 15
-  - 25
-DROPOUTS: # Dropout rates, adjusted progressively
-  - 0.10
-  - 0.20
-  - 0.30
-SHAPES: # Image sizes: MN-V3-S = 224, EN-B0 = 224, EN-V2S = 300, EN-V2M = 384, EN-V2L = 480
-  - 224
-  - 224
-  - 224
-BATCH_SIZES: # Mini-batch sizes (depends on GPU memory)
-  - 4
-  - 4
-  - 4
+FROZ_EPOCH: 10 # Number of epochs to train the frozen model: usually ~10 required to converge the dense classifier prior to fine-tuning
+
+BUF: 2 # Blocks to unfreeze for fine-tuning (suggest 1-2 for EN/CN, 5-9 for ViT). Set to 0 to keep base frozen or -1 to train on full model
+PROG_STAGE_LEN: 10  # Number of progressive fine-tuning epochs (see sequence of Magnitudes and Dropouts augmentations below) prior to final stage
+PROG_TOT_EPOCH: 60 # Total number of epochs required will depend on size of CLASS_SAMPLES_[DEFAULT|SPECIFIC] (larger requires fewer epochs per stage)
+
+# Regularisation/augmentation lists define the sequence of progressive training stages and must be of same length: default 4 but can add or delete  
+MAGNITUDES: # RandAug magnitudes (range 0-1), increased in stages, details: https://keras.io/api/keras_cv/layers/augmentation/rand_augment/
+  - 0.2
+  - 0.4
+  - 0.6
+  - 0.8
+DROPOUTS: # Stochastic dropout (0-1 range), increased in stages: drops random proportion of connections for regularisation during training
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+
+# Class samples default value and specific values for training data
+CLASS_SAMPLES_DEFAULT: 4000
+
+# Use list of dicts for specificity to allow for mapping sample counts to classes
+# CLASS_SAMPLES_SPECIFIC:
+#   - SAMPLES: 3000
+#     CLASS: "13"
+#   - SAMPLES: 3000
+#     CLASS: "11"
+#   - SAMPLES: 2000
+#     CLASS: "3"
+#   - SAMPLES: 1000
+#     CLASS: "1"
+#   - SAMPLES: 1000
+#     CLASS: "2"
+#   - SAMPLES: 1000
+#     CLASS: "7"
