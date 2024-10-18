@@ -110,7 +110,6 @@ def build_classifier(config, num_classes, df_size, img_size):
     print('Model built and compiled\n')
     return model
 
-
 def find_unfreeze_points(model, mname, blocks_to_unfreeze):
     block_starts = []
     print("\nModel Name =", mname)
@@ -129,7 +128,6 @@ def find_unfreeze_points(model, mname, blocks_to_unfreeze):
     if len(block_starts) < blocks_to_unfreeze:
         raise ValueError("Number of blocks to unfreeze exceeds available blocks.")
     return block_starts[-blocks_to_unfreeze:] if blocks_to_unfreeze > 0 else []
-
 
 # Unfreezes blocks of the model for fine-tuning
 def unfreeze_model(config, model, num_classes, df_size):
@@ -207,10 +205,10 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
             epoch_val_loss = history.history['val_loss'][-1] # check on non-augmented validation data to see if best epoch
             if epoch_val_loss < lowest_loss: # save model only if current val loss is better than any previous epoch
                 lowest_loss = epoch_val_loss
-                saving.save_model(model, best_model_fpath)
+                saving.save_model(model, best_model_fpath, include_optimizer=False)
                 print('New best-performing model epoch saved as: {}'.format(best_model_fpath))
     final_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+config['MODEL']+'_final.keras')
-    saving.save_model(model, final_model_fpath) # save final epoch as well
+    saving.save_model(model, final_model_fpath, include_optimizer=False) # save final epoch as well
     print('\nFinal model trained through to epoch {} saved as: {}'.format(total_epochs, final_model_fpath))
     hhs = {kk: np.ravel([hh.history[kk] for hh in histories]).astype("float").tolist() for kk in history.history.keys()}
     return(hhs, model, best_model_fpath)
@@ -219,7 +217,7 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
 def calc_class_metrics(model_fpath, test_fpath, output_fpath, classes, batch_size, img_size):
     nc = len(classes)
     print(f"\nCalculating class-specific metrics for best model '{model_fpath}'")
-    loaded_model = models.load_model(model_fpath)
+    loaded_model = models.load_model(model_fpath, compile=False)
     class_map = {name: idx for idx, name in enumerate(classes)}
     inv_class = {v: k for k, v in class_map.items()}
     class_ids = sorted(inv_class.values())
