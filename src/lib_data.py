@@ -61,6 +61,7 @@ def create_dataframe(ds_path, n, seed, custom_sample=False, custom_file=None):
         for label in set(ds_labels):
             n_samples = int(custom_file.get(label, custom_file['default']))
             label_df = ds_df[ds_df['Label'] == label]
+            print(f'Class: {label}, Number of samples: {n_samples}')
             if len(label_df) < n_samples:
                 sampled_df = label_df.sample(n=n_samples, replace=True, random_state=seed)
             else:
