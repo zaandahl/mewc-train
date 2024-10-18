@@ -13,9 +13,7 @@ from lib_model import build_classifier, fit_frozen, fit_progressive, calc_class_
 from lib_data import print_dsinfo, create_train, create_fixed, process_samples_from_config, ensure_output_directory, validate_directory_structure
 
 config = update_config_from_env(read_yaml("config.yaml"))
-print(config)
 custom_sample_file, is_custom_sample = process_samples_from_config(config)
-print(custom_sample_file)
 
 strategy = setup_strategy() # Set up the strategy for distributed training
 output_fpath = os.path.join(config['OUTPUT_PATH'], config['SAVEFILE'], config['MODEL'])
