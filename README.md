@@ -119,14 +119,14 @@ Note that for the `MAGNITUDES`, `DROPOUTS`, and other list-type variables, you c
 To specify different sample sizes for specific classes, use the following environment variable format:
 
 ```plaintext
-CLASS_SAMPLES_SPECIFIC=[ \
+CLASS_SAMPLES_SPECIFIC='[ \
     {"SAMPLES": 3000, "CLASS": "dog"}, \
     {"SAMPLES": 3000, "CLASS": "horse"}, \
     {"SAMPLES": 2000, "CLASS": "cow"}, \
     {"SAMPLES": 1000, "CLASS": "pademelon"}, \
     {"SAMPLES": 1000, "CLASS": "walrus"}, \
     {"SAMPLES": 1000, "CLASS": "gnat"} \
-]
+]'
 ```
 
 Simply include this varaible in your `$ENV_FILE` file, customise it to your models class names and desired sample sizes and pass it to Docker as usual:
