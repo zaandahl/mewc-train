@@ -46,6 +46,7 @@ def configure_optimizer_and_loss(config, num_classes, df_size):
         optimizer = optimizers.AdamW(learning_rate=lr, amsgrad=True, weight_decay=weight_decay)
     return optimizer, loss_f, act_f
 
+# Import base model from kimm or huggingface or local file
 def import_model(img_size, mname, REPO_ID, FILENAME):
     # Dictionary mapping mod strings to model constructors
     # print(kimm.list_models(weights="imagenet")) # to check all available kimm models
@@ -79,10 +80,11 @@ def import_model(img_size, mname, REPO_ID, FILENAME):
             model_base = model_constructors[mname.lower()](include_top=False, input_shape=[img_size, img_size, 3])
         else:
             print("Loading custom pretrained model from local file")
-            model_base = models.load_model(mname) # load the local filename specified in config.yaml
+            model_base = models.load_model(mname, compile=False) # load the local filename specified in config.yaml
             model_base = model_base.layers[0] # extract the base model from the keras sequential model stack (removing the custom top layers)
     return model_base
 
+# Configure and add model top to the base model
 def build_sequential_model(model_base, num_classes, act_f, mname, dr):
     model_base.trainable = False # Freeze the pretrained weights (to put the model in inference mode)
     model = models.Sequential() # create a sequential model
@@ -94,7 +96,7 @@ def build_sequential_model(model_base, num_classes, act_f, mname, dr):
     else:
         model.add(layers.GlobalAveragePooling2D(name="global_average_pooling"))
     model.add(layers.Dropout(dr, name="base_dropout")) # reqularization layer (random dropouts of a proportion of all neurons)      
-    compression_layer = 256 if num_classes <= 25 else 512 # set the compression_bottleneck based on the number of classes
+    compression_layer = 256 if num_classes <= 25 or model_base.output_shape[3] < 768 else (384 if model_base.output_shape[3] == 768 else 512)
     model.add(layers.Dense(compression_layer, name="compression_bottleneck")) 
     model.add(layers.ELU(alpha=1.0)) # Exponential Linear Unit activation function to avoid dead neurons 
     model.add(layers.Dropout(dr, name="top_dropout")) # second dropout regularization layer before the dense classifier     
@@ -110,6 +112,7 @@ def build_classifier(config, num_classes, df_size, img_size):
     print('Model built and compiled\n')
     return model
 
+# Finds the unfreeze points in the model for fine-tuning
 def find_unfreeze_points(model, mname, blocks_to_unfreeze):
     block_starts = []
     print("\nModel Name =", mname)
@@ -182,7 +185,7 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
     stages = len(config['MAGNITUDES'])
     prog_stage_len = config['PROG_STAGE_LEN']
     total_epochs = max(config['PROG_TOT_EPOCH'], stages*prog_stage_len)
-    best_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+config['MODEL']+'_best.keras')
+    best_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+config['MODEL']+'.keras')
     val_ds = create_tensorset(val_df, img_size, batch_size=config['BATCH_SIZE'])
     for stage, dropout, magnitude in zip(range(stages), config['DROPOUTS'], config['MAGNITUDES']):
         if stage == 0:
@@ -207,9 +210,6 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
                 lowest_loss = epoch_val_loss
                 saving.save_model(model, best_model_fpath, include_optimizer=False)
                 print('New best-performing model epoch saved as: {}'.format(best_model_fpath))
-    final_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+config['MODEL']+'_final.keras')
-    saving.save_model(model, final_model_fpath, include_optimizer=False) # save final epoch as well
-    print('\nFinal model trained through to epoch {} saved as: {}'.format(total_epochs, final_model_fpath))
     hhs = {kk: np.ravel([hh.history[kk] for hh in histories]).astype("float").tolist() for kk in history.history.keys()}
     return(hhs, model, best_model_fpath)
 
@@ -218,6 +218,8 @@ def calc_class_metrics(model_fpath, test_fpath, output_fpath, classes, batch_siz
     nc = len(classes)
     print(f"\nCalculating class-specific metrics for best model '{model_fpath}'")
     loaded_model = models.load_model(model_fpath, compile=False)
+    loaded_model.trainable = False # Freeze the whole model for inference-only mode thereafter
+    saving.save_model(loaded_model, model_fpath, include_optimizer=False) # save best model in a frozen state for smaller file size    
     class_map = {name: idx for idx, name in enumerate(classes)}
     inv_class = {v: k for k, v in class_map.items()}
     class_ids = sorted(inv_class.values())
