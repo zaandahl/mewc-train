@@ -51,22 +51,22 @@ def import_model(img_size, mname, REPO_ID, FILENAME):
     # Dictionary mapping mod strings to model constructors
     # print(kimm.list_models(weights="imagenet")) # to check all available kimm models
     model_constructors = {
-        'enb0': kimm.models.EfficientNetV2B0, # 5 M model params : 26 MB frozen file size
-        'enb2': kimm.models.EfficientNetV2B2, # 9 M : 37 MB
+        'en0': kimm.models.EfficientNetV2B0, # 5 M model params : 26 MB frozen file size
+        'en2': kimm.models.EfficientNetV2B2, # 9 M : 37 MB
         'ens': kimm.models.EfficientNetV2S, # 21 M : 84 MB
         'enm': kimm.models.EfficientNetV2M, # 54 M : 216 MB
         'enl': kimm.models.EfficientNetV2L, # 119 M : 475 MB
-        'enxl': kimm.models.EfficientNetV2XL, # 208 M : 835 MB
+        'enx': kimm.models.EfficientNetV2XL, # 208 M : 835 MB
         'cnp': kimm.models.ConvNeXtPico, # 9 M : 35 MB
         'cnn': kimm.models.ConvNeXtNano, # 16 M : 61 MB
         'cnt': kimm.models.ConvNeXtTiny, # 29 M : 112 MB
         'cns': kimm.models.ConvNeXtSmall, # 50 M : 200 MB 
         'cnb': kimm.models.ConvNeXtBase, # 89 M : 352 MB
         'cnl': kimm.models.ConvNeXtLarge, # 198 M : 787 MB
-        'vitt': kimm.models.VisionTransformerTiny16, # 6 M : 23 MB
-        'vits': kimm.models.VisionTransformerSmall16, # 22 M : 88 MB
-        'vitb': kimm.models.VisionTransformerBase16, # 87 M : 346 MB 
-        'vitl': kimm.models.VisionTransformerLarge16 # 305 M : 1.22 GB
+        'vtt': kimm.models.VisionTransformerTiny16, # 6 M : 23 MB
+        'vts': kimm.models.VisionTransformerSmall16, # 22 M : 88 MB
+        'vtb': kimm.models.VisionTransformerBase16, # 87 M : 346 MB 
+        'vtl': kimm.models.VisionTransformerLarge16 # 305 M : 1.22 GB
     # Note: actual trained model file size (MB/GB) will depend on number of blocks unfrozen during fine-tuning
     }
     try:
