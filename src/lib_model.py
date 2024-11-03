@@ -91,12 +91,25 @@ def build_sequential_model(model_base, num_classes, act_f, mname, dr):
     model.add(layers.Input(shape=model_base.input_shape[1:])) # Add an Input layer with the correct input shape   
     model.add(model_base) # add the base model to the sequential model 
     # Conditionally add the 1D global average pooling layer if mod contains "VT", else use 2D:
-    if "vt" in mname.lower():
+    if "vt" in mname[:2].lower():
         model.add(layers.GlobalAveragePooling1D(name="global_average_pooling"))
     else:
         model.add(layers.GlobalAveragePooling2D(name="global_average_pooling"))
     model.add(layers.Dropout(dr, name="base_dropout")) # reqularization layer (random dropouts of a proportion of all neurons)      
-    compression_layer = 256 if num_classes <= 25 or model_base.output_shape[3] < 768 else (384 if model_base.output_shape[3] == 768 else 512)
+    # Conditionally calculate the compression layer depending on whether mod contains "VT" or on the number of classes:
+    if "vt" in mname[:2].lower():
+        compression_layer = (
+            128 if model_base.output_shape[2] <= 384 
+            else 256 if num_classes <= 25 
+            else 384 if model_base.output_shape[2] == 768 
+            else 512
+        )
+    else:
+        compression_layer = (
+            256 if num_classes <= 25 or model_base.output_shape[3] < 768 
+            else 384 if model_base.output_shape[3] == 768 
+            else 512
+        )
     model.add(layers.Dense(compression_layer, name="compression_bottleneck")) 
     model.add(layers.ELU(alpha=1.0)) # Exponential Linear Unit activation function to avoid dead neurons 
     model.add(layers.Dropout(dr, name="top_dropout")) # second dropout regularization layer before the dense classifier     
