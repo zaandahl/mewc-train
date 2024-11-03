@@ -1,5 +1,5 @@
 SEED: 12345 # Random seed for reproducibility of sampled datasets and model initialisation
-MODEL: 'EN0' # EN:[0,2,S,M,L,XL] (e.g. ENS): CN:[P,N,T,S,B,L] (e.g. CNB); VT:[T,S,B,L] (e.g. VTS) or pretrained filename with model as first 3 char e.g. 'ens_pt.keras'
+MODEL: 'EN0' # EN:[0,2,S,M,L,X] (e.g. ENS): CN:[P,N,T,S,B,L] (e.g. CNB); VT:[T,S,B,L] (e.g. VTS) or pretrained filename with model as first 3 char e.g. 'ens_pt.keras'
 SAVEFILE: 'case_study' # Filename to save .keras model : MODEL name appended automatically
 OUTPUT_PATH: '/data/output' # Save Path for output files (model, class map, confusion matrix): SAVEFILE/MODEL added automatically to path
 
@@ -21,7 +21,7 @@ NUM_AUG: 3 # Number of per-image random augmentation layers to be applied to the
 
 FROZ_EPOCH: 10 # Number of epochs to train the frozen model: usually ~10 required to converge the dense classifier prior to fine-tuning
 
-BUF: 1 # Blocks to unfreeze for fine-tuning (suggest 1-2 for EN/CN, 5-9 for ViT). Set to 0 to keep base frozen or -1 to train on full model
+BUF: 1 # Blocks to unfreeze for fine-tuning (suggest 1-2 for EN/CN, 5-9 for VT). Set to 0 to keep base frozen or -1 to train on full model
 PROG_STAGE_LEN: 7  # Number of progressive fine-tuning epochs (see sequence of Magnitudes and Dropouts augmentations below) prior to final stage
 PROG_TOT_EPOCH: 30 # Total number of epochs required will depend on size of CLASS_SAMPLES_[DEFAULT|SPECIFIC] (larger requires fewer epochs per stage)
 

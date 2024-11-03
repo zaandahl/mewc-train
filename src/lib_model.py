@@ -90,8 +90,8 @@ def build_sequential_model(model_base, num_classes, act_f, mname, dr):
     model = models.Sequential() # create a sequential model
     model.add(layers.Input(shape=model_base.input_shape[1:])) # Add an Input layer with the correct input shape   
     model.add(model_base) # add the base model to the sequential model 
-    # Conditionally add the 1D global average pooling layer if mod contains "ViT", else use 2D:
-    if "vit" in mname.lower():
+    # Conditionally add the 1D global average pooling layer if mod contains "VT", else use 2D:
+    if "vt" in mname.lower():
         model.add(layers.GlobalAveragePooling1D(name="global_average_pooling"))
     else:
         model.add(layers.GlobalAveragePooling2D(name="global_average_pooling"))
