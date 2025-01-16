@@ -16,7 +16,10 @@ def process_samples_from_config(config):
     custom_sample_file_temp = {}
     if 'CLASS_SAMPLES_DEFAULT' in config:
         custom_sample_file_temp['default'] = config['CLASS_SAMPLES_DEFAULT']
-    for entry in config.get("CLASS_SAMPLES_SPECIFIC", []):
+    class_samples_specific = config.get("CLASS_SAMPLES_SPECIFIC", [])
+    if not isinstance(class_samples_specific, list):
+        class_samples_specific = []
+    for entry in class_samples_specific:
         class_name = entry["CLASS"]
         num_samples = entry["SAMPLES"]
         custom_sample_file_temp[class_name] = num_samples
