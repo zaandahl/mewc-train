@@ -1,5 +1,5 @@
 SEED: 12345 # Random seed for reproducibility of sampled datasets and model initialisation
-MODEL: 'EN0' # EN:[0,2,S,M,L,X] (e.g. ENS): CN:[P,N,T,S,B,L] (e.g. CNB); VT:[T,S,B,L] (e.g. VTS) or pretrained filename with model as first 3 char e.g. 'ens_pt.keras'
+MODEL: 'EN0' # EN:[0,2,S,M,L,X] (e.g. ENS): CN:[P,N,T,S,B,L] (e.g. CNB); VT:[T,S,B,L] (e.g. VTS) or pretrained filename with model as first 3 char e.g. '/model/ens_pt.keras'
 SAVEFILE: 'case_study' # Filename to save .keras model : MODEL name appended automatically
 OUTPUT_PATH: '/data/output' # Save Path for output files (model, class map, confusion matrix): SAVEFILE/MODEL added automatically to path
 
