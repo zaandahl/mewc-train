@@ -6,6 +6,7 @@ from huggingface_hub import hf_hub_download
 from lib_data import create_tensorset
 from sklearn import metrics
 from matplotlib import rcParams
+from lib_common import get_mod
 
 # Configures the optimizer and loss function
 def configure_optimizer_and_loss(config, num_classes, df_size):
@@ -120,7 +121,7 @@ def build_sequential_model(model_base, num_classes, act_f, mname, dr):
 def build_classifier(config, num_classes, df_size, img_size):
     optimizer, loss_f, act_f = configure_optimizer_and_loss(config, num_classes, df_size)
     model_base = import_model(img_size, mname=config['MODEL'], REPO_ID = config['REPO_ID'], FILENAME = config["FILENAME"])
-    model = build_sequential_model(model_base, num_classes, act_f, mname=config['MODEL'], dr=config['DROPOUTS'][0])
+    model = build_sequential_model(model_base, num_classes, act_f, mname=get_mod(config['MODEL']), dr=config['DROPOUTS'][0])
     model.compile(optimizer=optimizer, loss=loss_f, metrics=["accuracy"])
     print('Model built and compiled\n')
     return model
@@ -154,7 +155,7 @@ def unfreeze_model(config, model, num_classes, df_size):
         print("Freezing all layers for fine-tuning of model classifier only")
         model.layers[0].trainable = False # Set whole base model as frozen 
     elif blocks_to_unfreeze > 0:
-        unfreeze_points = find_unfreeze_points(model.layers[0], config['MODEL'], blocks_to_unfreeze)
+        unfreeze_points = find_unfreeze_points(model.layers[0], get_mod(config['MODEL']), blocks_to_unfreeze)
         print("Unfreezing blocks:", unfreeze_points, "for constrained fine-tuning")
         if unfreeze_points:
             start_unfreezing = False
@@ -198,7 +199,7 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
     stages = len(config['MAGNITUDES'])
     prog_stage_len = config['PROG_STAGE_LEN']
     total_epochs = max(config['PROG_TOT_EPOCH'], stages*prog_stage_len)
-    best_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+config['MODEL']+'.keras')
+    best_model_fpath = os.path.join(output_fpath, config['SAVEFILE']+'_'+get_mod(config['MODEL'])+'.keras')
     val_ds = create_tensorset(val_df, img_size, batch_size=config['BATCH_SIZE'])
     for stage, dropout, magnitude in zip(range(stages), config['DROPOUTS'], config['MAGNITUDES']):
         if stage == 0:
