@@ -187,15 +187,22 @@ def fit_frozen(config, model, train_df, val_df, num_classes, df_size, img_size):
     hist = model.fit(train_ds, validation_data=val_ds, epochs=config['FROZ_EPOCH'], callbacks=cb)
     unfreeze_model(config, model, num_classes, df_size)
     return(hist, model)  
-        
+
+# Sets the rate of the classifier-top Dropout layers. The compiled train step bakes in the rate,
+# so it must be rebuilt for a new rate to take effect.
+def set_dropout_rate(model, rate):
+    for layer in model.layers:
+        if isinstance(layer, layers.Dropout):
+            layer.rate = rate
+    model.make_train_function(force=True)
+
 # Fine-tunes the model progressively with blocks unfrozen and increasing regularisation
 def fit_progressive(config, model, train_df, val_df, output_fpath, img_size): 
     if model._compile_loss is None:
         print(">>> Error: Model NOT compiled.")
         sys.exit(1)
     histories = []
-    lowest_loss = 1 # monitor validation loss (initialise at high value to ensure first epoch is saved as best model)
-    dropout_layer=[-2,-4], # keep fixed unless top of model architecture is changed 
+    lowest_loss = float('inf') # monitor validation loss so that the first epoch is always saved as the best model
     stages = len(config['MAGNITUDES'])
     prog_stage_len = config['PROG_STAGE_LEN']
     total_epochs = max(config['PROG_TOT_EPOCH'], stages*prog_stage_len)
@@ -210,10 +217,7 @@ def fit_progressive(config, model, train_df, val_df, output_fpath, img_size):
             seq = range(stage*prog_stage_len, total_epochs)        
         print("\n>>> Stage: {}/{}, dropout: {}, magnitude: {}".format(stage+1, stages, dropout, magnitude))
         print(">>> This stage runs from epoch {} to {} out of {} total epochs".format(seq[0]+1, seq[len(seq)-1]+1, total_epochs))
-        if len(dropout_layer) > 1:
-            for layer_index in dropout_layer:
-                if isinstance(model.layers[layer_index], layers.Dropout):
-                    model.layers[layer_index].rate = dropout 
+        set_dropout_rate(model, dropout)
         for i in seq:
             train_ds = create_tensorset(train_df[i], img_size, batch_size=config['BATCH_SIZE'], 
                                         magnitude=magnitude, n_augments=config['NUM_AUG'], ds_name="train")            

@@ -15,9 +15,11 @@ from lib_model import (
     find_unfreeze_points, 
     unfreeze_model, 
     fit_frozen, 
-    fit_progressive, 
-    calc_class_metrics
+    fit_progressive,
+    calc_class_metrics,
+    set_dropout_rate
 )
+import numpy as np
 
 class TestLibModel(unittest.TestCase):
     def setUp(self):
@@ -139,6 +141,32 @@ class TestLibModel(unittest.TestCase):
         result = fit_progressive(self.config, model, self.train_df, self.val_df, self.output_fpath, self.img_size)
         self.assertIsInstance(result, tuple)
 
+    @patch('lib_model.create_tensorset')
+    @patch('lib_model.saving.save_model', return_value=MagicMock())
+    def test_fit_progressive_saves_when_val_loss_above_one(self, mock_save_model, mock_create_tensorset):
+        def create_dummy_dataset(*args, **kwargs):
+            return tf.data.Dataset.from_tensor_slices(
+                (tf.random.normal([10, 8]), 10.0 * tf.ones([10, 2]))
+            ).batch(2)
+        mock_create_tensorset.side_effect = create_dummy_dataset
+        model = models.Sequential([layers.Input(shape=(8,)), layers.Dropout(0.1), layers.Dense(2, kernel_initializer='zeros')])
+        model.compile(optimizer=optimizers.SGD(0.0), loss='mse')
+        config = dict(self.config, PROG_STAGE_LEN=1, PROG_TOT_EPOCH=1, MAGNITUDES=[0.1], DROPOUTS=[0.1])
+        fit_progressive(config, model, [self.train_df], self.val_df, self.output_fpath, self.img_size)
+        mock_save_model.assert_called_once()
+
+    def test_set_dropout_rate_takes_effect_after_first_fit(self):
+        model = models.Sequential([layers.Input((100,)), layers.Dropout(0.1),
+                                   layers.Dense(1, use_bias=False, kernel_initializer='ones', trainable=False)])
+        model.compile(optimizer=optimizers.SGD(0.0), loss='mse')
+        x = np.ones((512, 100), 'float32')
+        y = np.full((512, 1), 100.0, 'float32')
+        loss_low = model.fit(x, y, epochs=1, batch_size=32, verbose=0).history['loss'][-1]
+        set_dropout_rate(model, 0.5)
+        loss_high = model.fit(x, y, epochs=1, batch_size=32, verbose=0).history['loss'][-1]
+        self.assertEqual(model.layers[0].rate, 0.5)
+        self.assertGreater(loss_high, 4 * loss_low) # expected variance 100 r/(1-r): about 11 at 0.1, 100 at 0.5
+
     @patch('lib_model.optimizers.schedules.ExponentialDecay')
     def test_configure_optimizer_and_loss_binary(self, mock_exponential_decay):
         mock_exponential_decay.return_value = tf.keras.optimizers.schedules.ExponentialDecay(
@@ -226,7 +254,7 @@ class TestLibModel(unittest.TestCase):
 
     def test_find_unfreeze_points_vit(self):
         model = models.Sequential([layers.Conv1D(32, 3, input_shape=(224, 3), name='blocks_0_attn')])
-        result = find_unfreeze_points(model, 'vitt', 1)
+        result = find_unfreeze_points(model, 'vtt', 1)
         self.assertEqual(result, ['blocks_0_attn'])
 
     def test_find_unfreeze_points_cn(self):
