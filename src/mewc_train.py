@@ -27,7 +27,7 @@ train_df, num_classes = create_train(
     seed=config['SEED'],
     ns=custom_sample_file['default'], custom_sample=is_custom_sample, custom_file=custom_sample_file
 )
-classes = train_df['Label'].unique()
+classes = sorted(train_df['Label'].unique()) # sorted, as LabelEncoder orders the model's output axis
 class_map = {name: idx for idx, name in enumerate(classes)}
 df_size = train_df.shape[0]
 
@@ -39,6 +39,9 @@ print_dsinfo(train_df, 'Training Data')
 
 val_df = create_fixed(config['VAL_PATH']) # No image augmentation and fixed structure, for validation
 print_dsinfo(val_df, 'Validation Data')
+for name, df in (('validation', val_df), ('test', create_fixed(config['TEST_PATH']))):
+    if sorted(df['Label'].unique()) != classes: # label encoding is per dataset, so class sets must match exactly
+        raise ValueError(f"The {name} classes differ from the training classes")
 
 with strategy.scope(): # Trains the Dense classifier, but leaves the base model frozen, to avoid catastrophic cascades
     model = build_classifier(config, num_classes, df_size, img_size)

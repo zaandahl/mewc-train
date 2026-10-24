@@ -61,7 +61,7 @@ def create_dataframe(ds_path, n, seed, custom_sample=False, custom_file=None):
         ds_filepaths = [str(x) for x in ds_filepaths]
         ds_df = pd.DataFrame({'File': ds_filepaths, 'Label': ds_labels})
         sampled_dfs = []
-        for label in set(ds_labels):
+        for label in sorted(set(ds_labels)):
             n_samples = int(custom_file.get(label, custom_file['default']))
             label_df = ds_df[ds_df['Label'] == label]
             if len(label_df) < n_samples:
@@ -121,14 +121,14 @@ def create_tensorset(in_df, img_size, batch_size, magnitude=0, n_augments=0, ds_
     rand_aug = layers.RandAugment(value_range=(0, 255), augmentations_per_image=n_augments, magnitude=magnitude, magnitude_stddev=(magnitude/3))
     if ds_name == "train":
         ds = (tf.data.Dataset.from_tensor_slices((in_path, in_class))
-            .map(lambda img_path, img_class: (load_img(img_path, img_size), img_class))
+            .map(lambda img_path, img_class: (load_img(img_path, img_size), img_class), num_parallel_calls=tf.data.AUTOTUNE)
             .batch(batch_size)
             .map(lambda img, img_class: (rand_aug(tf.cast(img, tf.uint8)), img_class), num_parallel_calls=tf.data.AUTOTUNE,)
             .prefetch(tf.data.AUTOTUNE)
         )
     else:
         ds = (tf.data.Dataset.from_tensor_slices((in_path, in_class))
-            .map(lambda img_path, img_class: (load_img(img_path, img_size), img_class),)
+            .map(lambda img_path, img_class: (load_img(img_path, img_size), img_class), num_parallel_calls=tf.data.AUTOTUNE)
             .batch(batch_size)
             .prefetch(tf.data.AUTOTUNE)
         )  
